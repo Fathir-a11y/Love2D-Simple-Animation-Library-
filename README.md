@@ -1,2 +1,2 @@
 # Love2D-Simple-Animation-Library-
-A foundational animation class for LÖVE 2D. This module simplifies managing sprite-based animations by automatically parsing your spritesheets into Quads. It uses time-based progression (delta time) for smooth playback and provides core methods like update, draw, play, pause, and stop. Focus on your game logic, not manual frame calculations!
+A robust and simple animation class for LÖVE 2D. It automatically parses spritesheets into Quads and uses time-based progression for smooth playback. Now features enhanced looping control, allowing for both endless loops (run, idle) and single-pass playback (attack, death). Includes core methods: update, draw, play, pause, and stop.
