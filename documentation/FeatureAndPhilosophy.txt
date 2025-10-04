@@ -1,0 +1,28 @@
+Animation Library for LÖVE 2D
+=============================
+
+A simple, lightweight animation class for LÖVE 2D. 
+Focuses on simplicity and ease of use, so you can spend more time on your game logic and less time on frame calculations.
+
+Features
+--------
+- Looping and non-looping animations
+- Automatic spritesheet slicing (frameWidth × frameHeight)
+- Time-based animation using delta time (dt)
+- Easy-to-use control methods:
+    * update(dt)      -- advance the animation
+    * draw(x, y, r, sx, sy) -- render current frame
+    * play()          -- start/resume animation
+    * pause()         -- pause animation
+    * stop()          -- stop and reset to first frame
+    * setFrame(n)     -- manually set the frame
+
+Philosophy
+----------
+- Keep it simple: one library, minimal boilerplate.
+- Focus on game logic: let the library handle frame slicing and timing.
+- Easy to use: intuitive methods, ready to integrate into any Love2D project.
+
+License
+-------
+MIT License - free to use, modify, and distribute.
