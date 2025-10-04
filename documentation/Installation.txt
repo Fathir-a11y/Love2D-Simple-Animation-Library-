@@ -1,0 +1,5 @@
+Place animation.lua in your project folder (e.g., the same folder as main.lua or inside a libs/ subfolder).
+
+Require it in your main.lua:
+
+local Animation = require("animation") -- or require("libs.animation") if inside a subfolder
