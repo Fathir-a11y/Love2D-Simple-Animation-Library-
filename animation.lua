@@ -26,7 +26,7 @@ function Animation.new(imagePath, frameWidth, frameHeight, frameDuration, doLoop
     self.currentFrame = 1                     -- Index of the frame currently being shown.
     self.playing = true                       -- Animation state (running/paused).
     
-    -- NEW FEATURE: Looping control.
+    
     self.doLoop = doLoop ~= false             -- Defaults to true if not explicitly set to false.
 
     -- SPRITESHEET SLICING (QUAD SETUP)
@@ -64,7 +64,7 @@ function Animation:update(dt)
         self.timer = 0
         self.currentFrame = self.currentFrame + 1
         
-        -- LOOPING LOGIC (The updated feature)
+        
         if self.currentFrame > #self.frames then
             if self.doLoop then
                 self.currentFrame = 1 -- Reset to the first frame for looping.
