@@ -1,8 +1,8 @@
 -- File: Animation.lua
--- A simple, reusable library for managing spritesheet animations in Love2D.
+-- A robust yet simple spritesheet animation library for LÖVE 2D.
 
 local Animation = {}
--- Sets up the metatable. This is the standard pattern for creating a 'class' in Lua.
+-- Sets up the metatable for class-like behavior in Lua.
 Animation.__index = Animation
 
 ---
@@ -10,35 +10,37 @@ Animation.__index = Animation
 -- @param imagePath: Path to the spritesheet image file.
 -- @param frameWidth: The width of each individual frame.
 -- @param frameHeight: The height of each individual frame.
--- @param frameDuration: The time (in seconds) to display each frame (defaults to 0.1).
+-- @param frameDuration: Time (in seconds) to display each frame (default 0.1).
+-- @param doLoop: Boolean to determine if the animation should loop (default true).
 ---
-function Animation.new(imagePath, frameWidth, frameHeight, frameDuration)
-    -- Creates a new object instance and assigns its metatable.
+function Animation.new(imagePath, frameWidth, frameHeight, frameDuration, doLoop)
+    -- Creates a new object instance.
     local self = setmetatable({}, Animation)
 
     -- CORE PROPERTIES
-    self.spriteSheet = love.graphics.newImage(imagePath) -- Loads the spritesheet image.
+    self.spriteSheet = love.graphics.newImage(imagePath) -- Load the spritesheet image.
     self.frameWidth = frameWidth
     self.frameHeight = frameHeight
-    self.frameDuration = frameDuration or 0.1 -- Duration per frame.
-    self.timer = 0                            -- Timer to track elapsed time.
-    self.currentFrame = 1                     -- Index of the frame currently being shown (starts at 1).
-    self.playing = true                       -- Animation state (running or paused).
+    self.frameDuration = frameDuration or 0.1 -- Time duration per frame.
+    self.timer = 0                            -- Internal timer.
+    self.currentFrame = 1                     -- Index of the frame currently being shown.
+    self.playing = true                       -- Animation state (running/paused).
+    
+    -- NEW FEATURE: Looping control.
+    self.doLoop = doLoop ~= false             -- Defaults to true if not explicitly set to false.
 
     -- SPRITESHEET SLICING (QUAD SETUP)
     local imageWidth = self.spriteSheet:getWidth()
     local imageHeight = self.spriteSheet:getHeight()
     self.frames = {} -- Table to store all Love2D Quad objects.
 
-    -- Iterate through rows (Y)
+    -- Iterate through the spritesheet to slice it into Quads.
     for y = 0, (imageHeight / frameHeight) - 1 do
-        -- Iterate through columns (X)
         for x = 0, (imageWidth / frameWidth) - 1 do
-            -- Create a Love2D Quad (the cutting area)
             local quad = love.graphics.newQuad(
-                x * frameWidth, y * frameHeight, -- Starting X and Y position on the spritesheet
-                frameWidth, frameHeight,         -- Width and Height of the cut
-                imageWidth, imageHeight          -- Total width and height of the spritesheet
+                x * frameWidth, y * frameHeight, -- X/Y start position on the sheet
+                frameWidth, frameHeight,         -- Frame width/height
+                imageWidth, imageHeight          -- Total sheet dimensions
             )
             table.insert(self.frames, quad)
         end
@@ -49,13 +51,12 @@ end
 
 ---
 -- Updates the animation logic. Must be called in love.update(dt).
--- @param dt: Delta time (time elapsed since the last frame).
+-- @param dt: Delta time.
 ---
 function Animation:update(dt)
     -- Exit the function if the animation is paused.
     if not self.playing then return end
 
-    -- Add the delta time to the internal timer.
     self.timer = self.timer + dt
     
     -- Check if it's time to advance to the next frame.
@@ -63,9 +64,15 @@ function Animation:update(dt)
         self.timer = 0
         self.currentFrame = self.currentFrame + 1
         
-        -- Check for looping: if we passed the last frame.
+        -- LOOPING LOGIC (The updated feature)
         if self.currentFrame > #self.frames then
-            self.currentFrame = 1 -- Reset to the first frame.
+            if self.doLoop then
+                self.currentFrame = 1 -- Reset to the first frame for looping.
+            else
+                -- If non-looping, stop on the last frame and pause the animation.
+                self.currentFrame = #self.frames 
+                self.playing = false
+            end
         end
     end
 end
@@ -73,8 +80,8 @@ end
 ---
 -- Draws the current animation frame to the screen. Must be called in love.draw().
 -- @param x, y: Position to draw the animation.
--- @param r: Rotation (optional, defaults to 0).
--- @param sx, sy: Scale factors for X and Y (optional, defaults to 1).
+-- @param r: Rotation (optional, default 0).
+-- @param sx, sy: Scale factors (optional, default 1).
 ---
 function Animation:draw(x, y, r, sx, sy)
     love.graphics.draw(
@@ -84,11 +91,11 @@ function Animation:draw(x, y, r, sx, sy)
         r or 0,
         sx or 1,
         sy or 1
-        -- Note: Origin points (ox, oy) are left at default (top-left corner)
     )
 end
 
 -- CONTROL METHODS
+
 function Animation:play() 
     self.playing = true -- Resumes the animation.
 end
@@ -107,7 +114,7 @@ end
 -- @param n: The frame number to set (1-based index).
 ---
 function Animation:setFrame(n)
-    -- Check that the frame number is valid (within bounds).
+    -- Check that the frame number is valid.
     if n >= 1 and n <= #self.frames then
         self.currentFrame = n
     end
