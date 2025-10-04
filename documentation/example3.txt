@@ -1,9 +1,10 @@
-local Animation = require("Animation") 
+local Animation = require("Animation")
+local love = require("love")
 
 -- Global variables for the animation objects
-local loopingAnim     -- Animation that repeats (e.g., Idle/Run)
-local singlePassAnim  -- Animation that plays once (e.g., Attack/Death)
-local currentAnim     -- The animation currently being drawn/updated
+local loopingAnim      -- Animation that repeats (e.g., Idle/Run)
+local singlePassAnim   -- Animation that plays once (e.g., Attack/Death)
+local currentAnim      -- The animation currently being drawn/updated
 
 -- Player state control
 local isRunning = true
@@ -11,15 +12,13 @@ local isRunning = true
 function love.load()
     -- NOTE: You need a placeholder image named 'spritesheet.png' in your assets folder
     -- with at least 4 frames of size 32x32 for this example to work.
-    
+
     -- 1. LOOPING ANIMATION (Default: true)
-    -- Used for continuous actions like running or idling.
-    loopingAnim = Animation.new("assets/spritesheet.png", 32, 32, 0.15, true) 
+    loopingAnim = Animation.new("assets/spritesheet.png", 32, 32, 0.15, true)
 
     -- 2. SINGLE-PASS ANIMATION (doLoop: false)
-    -- Used for actions that complete and stop, like an attack.
-    singlePassAnim = Animation.new("assets/spritesheet.png", 32, 32, 0.05, false) 
-    
+    singlePassAnim = Animation.new("assets/spritesheet.png", 32, 32, 0.05, false)
+
     -- Start with the looping animation active
     currentAnim = loopingAnim
 end
@@ -39,15 +38,13 @@ end
 
 function love.keypressed(key)
     -- Demonstrate PLAY/PAUSE/STOP control methods
-
     if key == "space" and isRunning then
         -- DEMO: Transition from Looping to Single-Pass (Attack)
         isRunning = false
-        currentAnim:pause()         -- Pause the looping animation
+        currentAnim:pause()        
         currentAnim = singlePassAnim
-        currentAnim:stop()          -- Use STOP to reset the attack to frame 1
-        currentAnim:play()          -- Start the single-pass animation
-        
+        currentAnim:stop()          
+        currentAnim:play()          
     elseif key == "p" then
         -- DEMO: Pause/Play toggle
         if currentAnim.playing then
@@ -55,11 +52,9 @@ function love.keypressed(key)
         else
             currentAnim:play()
         end
-        
     elseif key == "s" then
         -- DEMO: Stop and Reset
         currentAnim:stop()
-        
     elseif key == "1" then
         -- DEMO: setFrame()
         currentAnim:setFrame(1)
@@ -81,12 +76,12 @@ function love.draw()
     local y = 200
     local status = currentAnim.playing and "PLAYING" or "PAUSED"
     local loopMode = currentAnim.doLoop and "Looping (Continuous)" or "Single-Pass (Plays Once)"
-    
+
     love.graphics.print("--- Animation Status ---", 10, y)
     y = y + 20
     love.graphics.print("Current Frame: " .. currentAnim.currentFrame .. " / " .. #currentAnim.frames, 10, y); y = y + 20
     love.graphics.print("Status: " .. status .. " | Mode: " .. loopMode, 10, y); y = y + 30
-    
+
     love.graphics.print("--- Controls ---", 10, y); y = y + 20
     love.graphics.print("[SPACE]: Start Attack (Single-Pass Demo)", 10, y); y = y + 15
     love.graphics.print("[P]: Toggle Play/Pause", 10, y); y = y + 15
