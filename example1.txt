@@ -1,0 +1,52 @@
+_G.love = require("love")
+local Animation = require("animation") -- import library
+
+
+function love.load()
+   _G.player = { -- make table of player
+      x = 500,
+      y = 300,
+      gravity = 720,
+      speed = 400,
+      jump_force = -400,
+      velocity_y = 0,
+      sprite = Animation.new("download.png", 32, 32, 0.12) -- use function new in library to make sprite
+    }
+end
+
+function love.update(dt)
+   -- logic
+   if love.keyboard.isDown("right") then
+      player.x = player.x + player.speed * dt
+   elseif love.keyboard.isDown("left") then
+      player.x = player.x - player.speed * dt
+   end
+
+
+   player.velocity_y = player.velocity_y + player.gravity * dt -- gravity in this game
+   player.y = player.y + player.velocity_y * dt
+
+   if player.y >= 580 then -- jump
+      player.y = 580
+      player.velocity_y = 0
+      if love.keyboard.isDown('space') then
+         player.velocity_y = player.jump_force
+      end
+   end
+
+
+
+   if player.x < 0 then -- logic of clamp in this game
+      player.x = 0
+   elseif player.x >= love.graphics.getWidth() - 32 then
+      player.x = love.graphics.getWidth() - 32
+   end
+   player.sprite:update(dt) -- use function of update in this library
+
+end
+
+function love.draw()
+   love.graphics.setBackgroundColor(1, 0, 1, 1)
+   player.sprite:draw(player.x, player.y) -- use function draw to make sprite seen 
+   
+end
