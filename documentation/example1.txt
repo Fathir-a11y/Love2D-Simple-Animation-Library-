@@ -1,28 +1,37 @@
 -- Importing the core Love2D modules (often implicit, but explicit here).
-_G.love = require("love") 
+
+_G.love = require("love")
+
 -- Import the animation library.
-local Animation = require("animation") 
+
+local Animation = require("animation")
 
 -- The love.load() function is called once at the start of the game.
+
 function love.load()
     -- Create a global table to hold all player properties.
-    _G.player = { 
+    _G.player = {
         -- Initial horizontal and vertical position of the player.
         x = 500,
         y = 300,
+
         -- Constant: The force of gravity (pixels/second^2).
         gravity = 720,
+
         -- Constant: Player's horizontal movement speed (pixels/second).
         speed = 400,
+
         -- Constant: The upward force applied during a jump (negative value moves up).
         jump_force = -400,
+
         -- Variable: The player's current vertical speed (affected by gravity and jumps).
         velocity_y = 0,
+
         -- Object: Initialize the player's animation object.
         -- Parameters: imagePath, frameWidth (32), frameHeight (32), frameDuration (0.12s), doLoop(true by default)
-        sprite = Animation.new("download.png", 32, 32, 0.12) 
+        sprite = Animation.new("download.png", 32, 32, 0.12)
     }
-    
+
     -- Set the window title for clarity
     love.window.setTitle("Simple Love2D Platformer")
 end
@@ -30,7 +39,7 @@ end
 -- The love.update(dt) function is called every frame for game logic and updates.
 function love.update(dt)
     -- This is crucial: Update the custom animation object using delta time (dt).
-    player.sprite:update(dt) 
+    player.sprite:update(dt)
 
     -- HORIZONTAL MOVEMENT LOGIC
     if love.keyboard.isDown("right") then
@@ -43,7 +52,7 @@ function love.update(dt)
 
     -- GRAVITY LOGIC
     -- Apply gravity force to the player's vertical velocity.
-    player.velocity_y = player.velocity_y + player.gravity * dt 
+    player.velocity_y = player.velocity_y + player.gravity * dt
     -- Update the player's vertical position based on their new velocity.
     player.y = player.y + player.velocity_y * dt
 
@@ -51,12 +60,12 @@ function love.update(dt)
     local groundLevel = 580 -- Define the ground height.
 
     -- Check if the player has hit or fallen below the ground level.
-    if player.y >= groundLevel then 
+    if player.y >= groundLevel then
         -- Clamp the Y position to keep the player exactly on the floor.
         player.y = groundLevel
         -- Stop vertical movement (reset velocity_y).
         player.velocity_y = 0
-        
+
         -- JUMPING LOGIC (Only allow jumping when grounded)
         if love.keyboard.isDown('space') then
             -- Apply the upward jump force to the vertical velocity.
@@ -69,7 +78,7 @@ function love.update(dt)
     local screenWidth = love.graphics.getWidth()
 
     -- Clamp position X on the left side (x cannot be less than 0).
-    if player.x < 0 then 
+    if player.x < 0 then
         player.x = 0
     -- Clamp position X on the right side (x cannot go past the screen width minus player width).
     elseif player.x >= screenWidth - playerWidth then
@@ -81,8 +90,7 @@ end
 function love.draw()
     -- Set the background color (e.g., Magenta/Fuchsia for visibility).
     love.graphics.setBackgroundColor(1, 0, 1, 1)
-    
+
     -- Draw the current frame of the player's animation at their calculated position.
-    player.sprite:draw(player.x, player.y) 
-    
+    player.sprite:draw(player.x, player.y)
 end
