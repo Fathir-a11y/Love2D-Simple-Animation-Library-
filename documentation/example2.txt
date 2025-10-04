@@ -1,4 +1,5 @@
 _G.love = require("love") -- Importing the core Love2D modules
+
 local Animation = require("Animation") -- Importing Animation Library
 
 -- Global variables for the animation objects
@@ -20,7 +21,7 @@ function love.load()
     -- Frame size: 64x32, Duration: 0.08s. 'doLoop' is explicitly set to FALSE.
     -- This animation will play once and stop on the last frame.
     playerAttackAnim = Animation.new("assets/player_attack.png", 64, 32, 0.08, false)
-    
+
     -- Start the game in the 'Run' state
     playerRunAnim:play()
     playerAttackAnim:stop() -- Ensure attack starts from frame 1
@@ -28,7 +29,6 @@ end
 
 function love.update(dt)
     -- Update the active animation object.
-    -- Only the animation where 'self.playing' is true will actually advance.
     playerRunAnim:update(dt)
     playerAttackAnim:update(dt)
 
@@ -39,9 +39,8 @@ function love.update(dt)
             -- Attack is finished, switch back to the Run animation state
             isAttacking = false
             playerRunAnim:play()
-            
             -- Optional: Stop the attack animation to reset it for the next use
-            playerAttackAnim:stop() 
+            playerAttackAnim:stop()
         end
     else
         -- Simple movement logic if not attacking
@@ -56,10 +55,9 @@ function love.keypressed(key)
     -- Start the attack when the spacebar is pressed
     if key == "space" and not isAttacking then
         isAttacking = true
-        
         -- Pause the run animation and start the attack animation
-        playerRunAnim:pause() 
-        playerAttackAnim:play() 
+        playerRunAnim:pause()
+        playerAttackAnim:play()
     end
 end
 
@@ -67,13 +65,12 @@ function love.draw()
     -- Draw based on the current state
     if isAttacking then
         -- Draw the attack animation (using a scale of 2x for visibility)
-        -- Note: The attack animation is drawn at the same position.
         playerAttackAnim:draw(playerX - 16, playerY, 0, 2, 2)
     else
         -- Draw the running animation (using a scale of 2x for visibility)
         playerRunAnim:draw(playerX, playerY, 0, 2, 2)
     end
-    
+
     -- Simple instructions text
     love.graphics.print("Press SPACE to attack (Non-Looping)", 10, 10)
     love.graphics.print("The player movement uses the Run (Looping) animation.", 10, 30)
