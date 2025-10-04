@@ -1,7 +1,5 @@
--- main.lua
-
--- Assuming 'Animation.lua' is in the same directory.
-local Animation = require("Animation")
+_G.love = require("love") -- Importing the core Love2D modules
+local Animation = require("Animation") -- Importing Animation Library
 
 -- Global variables for the animation objects
 local playerRunAnim
