@@ -1,6 +1,6 @@
 -- Importing the core Love2D modules (often implicit, but explicit here).
 
-_G.love = require("love")
+local love = require("love")
 
 -- Import the animation library.
 
