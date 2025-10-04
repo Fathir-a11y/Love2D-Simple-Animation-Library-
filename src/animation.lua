@@ -1,6 +1,3 @@
--- File: Animation.lua
--- A robust yet simple spritesheet animation library for LÖVE 2D.
-
 local Animation = {}
 -- Sets up the metatable for class-like behavior in Lua.
 Animation.__index = Animation
