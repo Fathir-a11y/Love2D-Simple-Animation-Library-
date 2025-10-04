@@ -1,6 +1,5 @@
-_G.love = require("love") -- Importing the core Love2D modules
-
-local Animation = require("Animation") -- Importing Animation Library
+local love = require("love") -- Importing the core Love2D modules
+local Animation = require("animation") -- Importing Animation Library
 
 -- Global variables for the animation objects
 local playerRunAnim
