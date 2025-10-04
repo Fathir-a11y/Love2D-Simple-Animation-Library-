@@ -1,0 +1,82 @@
+-- main.lua
+
+-- Assuming 'Animation.lua' is in the same directory.
+local Animation = require("Animation")
+
+-- Global variables for the animation objects
+local playerRunAnim
+local playerAttackAnim
+
+-- Variables to track player state and position
+local playerX = 100
+local playerY = 300
+local isAttacking = false
+
+function love.load()
+    -- 1. Create a LOOPING animation (Run)
+    -- Frame size: 32x32, Duration: 0.1s. 'doLoop' is TRUE by default.
+    -- This animation will play continuously.
+    playerRunAnim = Animation.new("assets/player_run.png", 32, 32, 0.1)
+
+    -- 2. Create a NON-LOOPING animation (Attack)
+    -- Frame size: 64x32, Duration: 0.08s. 'doLoop' is explicitly set to FALSE.
+    -- This animation will play once and stop on the last frame.
+    playerAttackAnim = Animation.new("assets/player_attack.png", 64, 32, 0.08, false)
+    
+    -- Start the game in the 'Run' state
+    playerRunAnim:play()
+    playerAttackAnim:stop() -- Ensure attack starts from frame 1
+end
+
+function love.update(dt)
+    -- Update the active animation object.
+    -- Only the animation where 'self.playing' is true will actually advance.
+    playerRunAnim:update(dt)
+    playerAttackAnim:update(dt)
+
+    -- Logic for the non-looping attack animation
+    if isAttacking then
+        -- Check if the attack animation has finished playing
+        if not playerAttackAnim.playing then
+            -- Attack is finished, switch back to the Run animation state
+            isAttacking = false
+            playerRunAnim:play()
+            
+            -- Optional: Stop the attack animation to reset it for the next use
+            playerAttackAnim:stop() 
+        end
+    else
+        -- Simple movement logic if not attacking
+        playerX = playerX + 100 * dt
+        if playerX > love.graphics.getWidth() + 32 then
+            playerX = -32
+        end
+    end
+end
+
+function love.keypressed(key)
+    -- Start the attack when the spacebar is pressed
+    if key == "space" and not isAttacking then
+        isAttacking = true
+        
+        -- Pause the run animation and start the attack animation
+        playerRunAnim:pause() 
+        playerAttackAnim:play() 
+    end
+end
+
+function love.draw()
+    -- Draw based on the current state
+    if isAttacking then
+        -- Draw the attack animation (using a scale of 2x for visibility)
+        -- Note: The attack animation is drawn at the same position.
+        playerAttackAnim:draw(playerX - 16, playerY, 0, 2, 2)
+    else
+        -- Draw the running animation (using a scale of 2x for visibility)
+        playerRunAnim:draw(playerX, playerY, 0, 2, 2)
+    end
+    
+    -- Simple instructions text
+    love.graphics.print("Press SPACE to attack (Non-Looping)", 10, 10)
+    love.graphics.print("The player movement uses the Run (Looping) animation.", 10, 30)
+end
