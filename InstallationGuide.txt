@@ -1,1 +1,5 @@
+Copy animation.lua into your project folder.
+
+Require it in your main file, example:
+local Animation = require("animation")
 
