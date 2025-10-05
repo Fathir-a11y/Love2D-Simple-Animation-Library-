@@ -1,161 +1,163 @@
---[[
-Animation.lua
-A simple, lightweight 2D animation library for Love2D.
-Supports looping and non-looping animations, scaling, rotation, and frame control.
+--[[ 
+    Animation.lua - Optimized single-file sprite animation library for Love2D
+    Author: Fathir-a11y
+    Features:
+        - Single file, easy to include in any project
+        - Handles looping and single-pass (non-looping) animations
+        - Optimized for large numbers of sprites
+        - Automatic culling: skips update/draw when sprite is outside screen
+        - Simple control methods: play, pause, stop, setFrame
 --]]
 
 local Animation = {}
--- Set the metatable for class-like behavior
 Animation.__index = Animation
 
----
--- Constructor: Creates a new animation object.
--- @param imagePath: Path to the spritesheet image file.
--- @param frameWidth: Width of a single frame in pixels.
--- @param frameHeight: Height of a single frame in pixels.
--- @param frameDuration: Time (seconds) each frame is displayed (default 0.1).
--- @param doLoop: Boolean whether the animation should loop (default true).
--- @return: New Animation object
----
+--- Constructor: Creates a new animation object
+-- @param imagePath: Path to the spritesheet image
+-- @param frameWidth: Width of each individual frame in pixels
+-- @param frameHeight: Height of each individual frame in pixels
+-- @param frameDuration: Time (seconds) to display each frame (default 0.1)
+-- @param doLoop: Boolean indicating if animation should loop (default true)
 function Animation.new(imagePath, frameWidth, frameHeight, frameDuration, doLoop)
+    -- Create the animation object
     local self = setmetatable({}, Animation)
 
-    -- Load the spritesheet
+    -- Load the sprite sheet from file
     self.spriteSheet = love.graphics.newImage(imagePath)
 
-    -- Frame dimensions
+    -- Store frame dimensions
     self.frameWidth = frameWidth
     self.frameHeight = frameHeight
 
-    -- Duration per frame
+    -- Time per frame; default to 0.1 seconds
     self.frameDuration = frameDuration or 0.1
 
-    -- Internal timer to track frame progression
+    -- Timer to track frame progression
     self.timer = 0
 
-    -- Current frame index (1-based)
+    -- Index of the current frame being displayed
     self.currentFrame = 1
 
-    -- Animation state
+    -- Flag indicating if animation is currently playing
     self.playing = true
 
-    -- Looping flag (default true)
+    -- Loop flag (true by default)
     self.doLoop = doLoop ~= false
 
-    -- Slice the spritesheet into quads (frames)
+    --[[ 
+        Slice the sprite sheet into frames using Quads.
+        Love2D Quads allow drawing specific regions of an image efficiently.
+        Frames are stored in a table for quick access during draw/update.
+    --]]
+    local imageWidth, imageHeight = self.spriteSheet:getWidth(), self.spriteSheet:getHeight()
     self.frames = {}
-    local imageWidth = self.spriteSheet:getWidth()
-    local imageHeight = self.spriteSheet:getHeight()
-
-    -- Calculate number of frames horizontally and vertically
-    local cols = imageWidth / frameWidth
-    local rows = imageHeight / frameHeight
-
-    -- Create Quads for each frame
-    for y = 0, rows - 1 do
-        for x = 0, cols - 1 do
+    for y = 0, (imageHeight / frameHeight) - 1 do
+        for x = 0, (imageWidth / frameWidth) - 1 do
             local quad = love.graphics.newQuad(
-                x * frameWidth, y * frameHeight,  -- Top-left of frame in sheet
-                frameWidth, frameHeight,           -- Frame dimensions
-                imageWidth, imageHeight            -- Spritesheet dimensions
+                x * frameWidth, y * frameHeight, -- top-left corner of the frame
+                frameWidth, frameHeight,         -- size of the frame
+                imageWidth, imageHeight          -- total size of sprite sheet
             )
             table.insert(self.frames, quad)
         end
     end
 
-    -- Safety check: no frames loaded
-    if #self.frames == 0 then
-        error("Animation Error: No frames found in " .. imagePath)
-    end
+    -- Optional: track last drawn position for culling optimization
+    self.lastScreenX = nil
+    self.lastScreenY = nil
 
     return self
 end
 
----
--- Updates the animation logic.
--- Must be called in love.update(dt)
--- @param dt: Delta time in seconds
----
-function Animation:update(dt)
-    if not self.playing then return end -- Exit if paused
+--- Updates the animation logic. Call this in love.update(dt)
+-- @param dt: Delta time since last frame
+-- @param x, y: Optional current screen position for culling
+function Animation:update(dt, x, y)
+    -- Skip update if animation is paused
+    if not self.playing then return end
 
-    -- Accumulate time
+    --[[ 
+        Culling optimization:
+        If x and y are provided, skip updating the animation
+        if the sprite is completely outside the screen boundaries.
+        This reduces CPU usage when there are many off-screen sprites.
+    --]]
+    if x and y then
+        local screenW, screenH = love.graphics.getWidth(), love.graphics.getHeight()
+        if x + self.frameWidth < 0 or x > screenW or y + self.frameHeight < 0 or y > screenH then
+            return -- skip update
+        end
+    end
+
+    -- Advance timer by delta time
     self.timer = self.timer + dt
 
-    -- Advance frames if timer exceeds frameDuration
-    while self.timer >= self.frameDuration do
-        self.timer = self.timer - self.frameDuration -- Subtract instead of reset to handle lag
-
+    -- Check if it's time to move to the next frame
+    if self.timer >= self.frameDuration then
+        self.timer = self.timer - self.frameDuration
         self.currentFrame = self.currentFrame + 1
 
-        -- Looping or non-looping behavior
+        -- Handle looping and stopping at the last frame
         if self.currentFrame > #self.frames then
             if self.doLoop then
-                self.currentFrame = 1 -- Loop back to first frame
+                self.currentFrame = 1 -- loop back to first frame
             else
-                self.currentFrame = #self.frames -- Stay on last frame
-                self.playing = false          -- Stop animation
-                break
+                self.currentFrame = #self.frames -- stop at last frame
+                self.playing = false
             end
         end
     end
 end
 
----
--- Draws the current frame to the screen.
--- Must be called in love.draw()
--- @param x, y: Position to draw the animation (top-left by default)
--- @param r: Rotation in radians (optional, default 0)
--- @param sx, sy: Scale factors (optional, default 1)
--- @param ox, oy: Origin offset (optional, default 0, useful for rotation)
----
-function Animation:draw(x, y, r, sx, sy, ox, oy)
-    -- Ensure there is at least one frame
-    if #self.frames == 0 then return end
+--- Draws the current frame to the screen. Call this in love.draw()
+-- @param x, y: Position to draw the sprite
+-- @param r: Optional rotation (default 0)
+-- @param sx, sy: Optional scale factors (default 1)
+function Animation:draw(x, y, r, sx, sy)
+    -- Default scale to 1 if not provided
+    sx, sy = sx or 1, sy or 1
 
+    -- Culling optimization:
+    -- Skip drawing if the sprite is completely off-screen
+    local screenW, screenH = love.graphics.getWidth(), love.graphics.getHeight()
+    if x + self.frameWidth * sx < 0 or x > screenW or y + self.frameHeight * sy < 0 or y > screenH then
+        return
+    end
+
+    -- Draw the current frame
     love.graphics.draw(
         self.spriteSheet,
         self.frames[self.currentFrame],
         x, y,
         r or 0,
-        sx or 1, sy or 1,
-        ox or 0, oy or 0
+        sx, sy
     )
 end
 
--- CONTROL METHODS
+--[[ Control Methods ]]--
 
----
--- Starts or resumes the animation
----
+--- Resume animation playback
 function Animation:play()
     self.playing = true
 end
 
----
--- Pauses the animation
----
+--- Pause animation playback
 function Animation:pause()
     self.playing = false
 end
 
----
--- Stops the animation and resets to first frame
----
+--- Stop animation and reset to first frame
 function Animation:stop()
     self.playing = false
     self.currentFrame = 1
-    self.timer = 0 -- Reset timer to prevent immediate frame jump on next play
 end
 
----
--- Manually set the current frame
--- @param n: Frame number (1-based)
----
+--- Manually set current animation frame
+-- @param n: Frame index (1-based)
 function Animation:setFrame(n)
     if n >= 1 and n <= #self.frames then
         self.currentFrame = n
-        self.timer = 0 -- Reset timer to avoid immediate frame advance
+        self.timer = 0 -- reset timer to avoid instant frame skip
     end
 end
 
